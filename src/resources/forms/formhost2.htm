@@ -1,0 +1,82 @@
+<html>
+	<head>
+		<script language="javascript" src="../servenv.js"></script>
+		<script language="javascript" src="../dropdown.js"></script>
+		<script language="javascript" src="../objects/FeedBack.js"></script>
+		<script language="javascript" src="wizard.js"></script>
+		
+		<script language="javaScript" type="text/javascript" src="xmltoken.js"></script>
+		<script language="javaScript" type="text/javascript" src="util.js"></script>
+		<script language="javaScript" type="text/javascript" src="dom.js"></script>
+		<script language="javaScript" type="text/javascript" src="xpath.js"></script>
+		<script language="javaScript" type="text/javascript" src="xslt.js"></script>
+		<script language="javaScript" type="text/javascript" src="formutil2.js"></script>
+		<style type="text/css">
+			/* Para evitar bordas e altura desproporcional */
+			html, body { height:100%; }
+			body { margin:0; padding: 0; }
+		</style>
+	</head>
+	<body>
+		<iframe id="content" src="about:blank" style="width:100%;height:100%" frameborder="0" vspace="0" hspace="0" marginwidth="0" marginheight="0" scrolling="auto"></iframe>
+		<script type="text/javascript">
+			// bypass
+			function transferSelect(action) {
+				frames[0].transferSelect(action);
+			}
+		
+			// Aqui assumo esta no firefox/safari/chrome
+			var ptlWnd=envFindObjectWindow("lawsonPortal");
+			// can't use 'portalWnd'...another instance will be initialized
+			//if (ptlWnd && !ptlWnd.IEXMLSERVICE) {
+				ptlWnd.IEXMLSERVICE=new ChromeFormService(ptlWnd);
+			//}
+
+			
+			//var start = new Date().getTime();
+			frmhostXML = ptlWnd.IEXMLSERVICE.loadForm(document.location.search);
+			if (! frmhostXML) {
+				alert("Error loading:" + document.location.search);
+			} else {
+				var sdoc = ptlWnd.IEXMLSERVICE.buildForm(frmhostXML);
+				if (document.location.search.indexOf("_TKN=LO12.1") != -1) {
+					var psl = sdoc.indexOf("if ((parent.location+\"\").indexOf(\"/admin/officemanager\")==-1)");
+					if (psl != -1) {
+						psl += 5;
+						sdoc = sdoc.substring(0, psl) + "parent." + sdoc.substring(psl);
+					}
+				}
+				var ps = sdoc ? sdoc.indexOf("<script") : -1;
+				if (ps != -1) {
+					var scriptNames=new Array("../servenv.js", "../dropdown.js", "../objects/FeedBack.js", "wizard.js", "lawform2.js", "xmltoken.js", "util.js", "dom.js", "xpath.js", "xslt.js", "formutil2.js");
+					
+					var stylesNames=new Array("../portal.css", "lawform.css", "wizard.css", "../dropdown.css");
+					for(var i=0; i < scriptNames.length; i++) {
+						scriptNames[i] = "<scr" + "ipt language=\"javascript\" type=\"text/javascript\" src=\""  + scriptNames[i] + "\"></scr"  + "ipt>";
+					}
+					for(var j=0; j < stylesNames.length; j++) {
+						stylesNames[j] = "<lin" +"k rel=\"stylesheet\" href=\"" + stylesNames[j] +"\" />";
+					}
+					sdoc = sdoc.substring(0, ps) + "\n" + scriptNames.join("\n") + "\n" + stylesNames.join("\n") + "\n" + sdoc.substring(ps);
+				}
+				ps = sdoc.indexOf("&lt;");
+				if (ps != -1) {
+					sdoc = sdoc.substring(0, ps) + "<" + sdoc.substring(ps+4);
+				}
+				ps = sdoc.indexOf("&gt;");
+				if (ps != -1) {
+					sdoc = sdoc.substring(0, ps) + ">" + sdoc.substring(ps+4);
+				}
+				// console.log(sdoc);
+				document.getElementById("content").contentWindow.flowRE = flowRE;
+				document.getElementById("content").contentWindow.frmSwitchTab = frmSwitchTab;
+				with (document.getElementById("content").contentWindow.document) {
+					open();
+					write(sdoc);
+					close();
+				}
+			}
+			// console.log("Time " + ((new Date().getTime() - start) / 1000.0));
+		</script>
+	</body>
+</html>
